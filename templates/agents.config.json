@@ -1,0 +1,48 @@
+{
+  "$schema_note": "Copy this file to <product-repo>/.claude/agents.config.json and fill in the values. Every agent reads this at the start of its run to know which product it is working on.",
+
+  "product_tag": "Birdie",
+  "product_kind": "consumer mobile app",
+
+  "notion": {
+    "database_id": "REPLACE_WITH_NOTION_DATABASE_ID",
+    "parent_property": "Parent ticket",
+    "phase_property": "Phase",
+    "agent_property": "Agent",
+    "status_property": "Status",
+    "artifact_property": "Artifact link",
+    "product_property": "Product"
+  },
+
+  "artifact_path": "tickets",
+
+  "stack_hints": "React Native, TypeScript, Supabase, PostHog for analytics, Sentry for errors. Mobile-first. iOS + Android.",
+
+  "design_voice": "warm, calm, trustworthy — healthcare-adjacent audience. Generous whitespace, large tap targets, WCAG AA minimum.",
+
+  "feature_flag_tool": "PostHog",
+  "analytics_event_prefix": "birdie_",
+
+  "speed_bias": "prefer smaller, reversible changes over larger, robust ones — speed of learning > completeness of solution",
+
+  "escalation": {
+    "investigate_max_failed_fixes": 3,
+    "investigate_wall_clock_hours": 12,
+    "notify": "haiyen.as@gmail.com"
+  },
+
+  "agent_overrides": {
+    "designer": {
+      "extra_constraints": "Healthcare-appropriate. Large touch targets (min 44pt). Low-vision considerations. Avoid clinical sterility — should feel like a calm companion, not a medical chart."
+    },
+    "build": {
+      "test_command": "yarn test --watchAll=false",
+      "commit_style": "conventional",
+      "preflight_strictness": "high"
+    },
+    "qa": {
+      "platforms": ["iOS Simulator", "Android Emulator"],
+      "browser_qa": false
+    }
+  }
+}

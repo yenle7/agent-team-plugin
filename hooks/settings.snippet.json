@@ -1,0 +1,16 @@
+{
+  "_comment": "Merge these keys into your product repo's .claude/settings.json. The install.sh script does this for you. If you're doing it by hand, paste the 'hooks' object into your settings file.",
+
+  "hooks": {
+    "SubagentStart": [
+      {
+        "command": "python3 ~/.claude/plugins/agent-team/hooks/notion_ticket.py start"
+      }
+    ],
+    "SubagentStop": [
+      {
+        "command": "python3 ~/.claude/plugins/agent-team/hooks/notion_ticket.py finish"
+      }
+    ]
+  }
+}
