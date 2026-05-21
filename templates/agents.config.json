@@ -11,7 +11,9 @@
     "agent_property": "Agent",
     "status_property": "Status",
     "artifact_property": "Artifact link",
-    "product_property": "Product"
+    "product_property": "Product",
+    "task_property": "Task",
+    "summary_property": "Summary"
   },
 
   "artifact_path": "tickets",

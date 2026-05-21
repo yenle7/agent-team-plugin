@@ -69,6 +69,8 @@ Create one database (or use the existing one, with a `Product` property to multi
 | Agent | Select | `plan`, `build`, etc. |
 | Status | Select | Not started / Triggered / Triggered (running) / In progress / Done / Blocked |
 | Product | Select | Birdie / Birdie Play / … |
+| Task | Text | The task description handed to the agent (filled on start) |
+| Summary | Text | What the agent reported doing (filled on finish) |
 | Started | Date | |
 | Finished | Date | |
 | Artifact link | URL | Optional — link to the `tickets/<id>/<phase>.md` file in GitHub |

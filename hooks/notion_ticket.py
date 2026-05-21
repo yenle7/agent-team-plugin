@@ -96,6 +96,40 @@ def get_subagent(payload: dict) -> str:
     )
 
 
+def rich_text(s: str) -> dict:
+    """Build a Notion rich_text property value, truncated to Notion's 2000-char cap."""
+    s = (s or "").strip()
+    if len(s) > 2000:
+        s = s[:1997] + "..."
+    return {"rich_text": [{"text": {"content": s}}] if s else []}
+
+
+def get_task_description(payload: dict) -> str:
+    """The task text handed to the subagent (Task tool's prompt)."""
+    tool_input = payload.get("tool_input") or {}
+    return tool_input.get("prompt") or tool_input.get("description") or ""
+
+
+def get_result_summary(payload: dict) -> str:
+    """What the subagent reported back (Task tool's response)."""
+    resp = payload.get("tool_response")
+    if resp is None:
+        return ""
+    if isinstance(resp, str):
+        return resp
+    if isinstance(resp, list):
+        parts = []
+        for item in resp:
+            if isinstance(item, dict):
+                parts.append(item.get("text") or item.get("content") or "")
+            else:
+                parts.append(str(item))
+        return "\n".join(p for p in parts if p)
+    if isinstance(resp, dict):
+        return resp.get("text") or resp.get("content") or json.dumps(resp)
+    return str(resp)
+
+
 def state_file(repo_root: Path, session_id: str, subagent: str) -> Path:
     state_dir = repo_root / ".claude" / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
@@ -121,6 +155,7 @@ def handle_start(payload: dict, repo_root: Path, cfg: dict, token: str) -> None:
         cfg["notion"].get("agent_property", "Agent"):    {"select": {"name": subagent}},
         cfg["notion"].get("status_property", "Status"):  {"select": {"name": "In progress"}},
         cfg["notion"].get("product_property", "Product"):{"select": {"name": cfg.get("product_tag", "?")}},
+        cfg["notion"].get("task_property", "Task"):      rich_text(get_task_description(payload)),
         "Started": {"date": {"start": now_iso}},
     }
 
@@ -153,6 +188,7 @@ def handle_finish(payload: dict, repo_root: Path, cfg: dict, token: str) -> None
 
     props = {
         cfg["notion"].get("status_property", "Status"): {"select": {"name": "Done"}},
+        cfg["notion"].get("summary_property", "Summary"): rich_text(get_result_summary(payload)),
         "Finished": {"date": {"start": now_iso}},
     }
     notion_request("PATCH", f"/pages/{state['page_id']}", {"properties": props}, token)

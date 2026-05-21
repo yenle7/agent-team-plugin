@@ -1,6 +1,6 @@
 {
   "name": "agent-team",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A small-startup-team of Claude Code subagents that take a consumer-app feature from Think to Reflect, logging every phase to Notion.",
   "author": {
     "name": "Yen"
