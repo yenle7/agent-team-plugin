@@ -29,8 +29,9 @@ cd /Users/yen/Documents/Birdie/agent_team_plugin
 git init && git add . && git commit -m "initial scaffold"
 gh repo create agent-team-plugin --private --source=. --push   # or your remote of choice
 
-# 2. Install the plugin into Claude Code.
-claude plugin install https://github.com/<you>/agent-team-plugin
+# 2. Install the plugin into Claude Code (the repo itself acts as the marketplace).
+claude plugin marketplace add https://github.com/<you>/agent-team-plugin.git
+claude plugin install agent-team@agent-team-plugin
 
 # 3. Verify.
 claude plugin list
@@ -46,7 +47,7 @@ bash ~/.claude/plugins/agent-team/scripts/install.sh
 
 What that does, idempotently:
 - Creates `.claude/agents.config.json` from the template, prefilled with `product_tag` from the folder name.
-- Creates or merges `.claude/settings.json` to register the SubagentStart/Stop hooks.
+- Creates or merges `.claude/settings.json` to register the Task-tool PreToolUse/PostToolUse hooks.
 - Registers the Notion MCP for this repo (`claude mcp add notion …`).
 - Adds `.claude/state/` to `.gitignore`.
 
@@ -142,7 +143,9 @@ Same plugin, different configs. The Notion `Product` property lets you filter ti
 
 ```
 agent_team_plugin/
-├── plugin.json                  ← manifest (verify schema against current docs)
+├── .claude-plugin/
+│   └── plugin.json              ← plugin manifest (Claude Code reads it from here)
+├── README.md                    ← short overview
 ├── README.agents.md             ← this file
 ├── agents/                      ← 12 .md subagent files
 ├── hooks/
@@ -162,7 +165,7 @@ agent_team_plugin/
 
 - **`plugin.json` schema.** The Claude Code plugin manifest format is evolving. Confirm field names against [the current docs](https://code.claude.com/docs/en/plugins) before publishing.
 - **Subagent directory name.** Recent Claude Code versions use `agents/` inside the plugin; some older docs reference `subagents/`. Run `claude /agents` from a repo that has the plugin installed — if your agents don't show up, try renaming the folder.
-- **Hook event names.** `SubagentStart` / `SubagentStop` are what `notion_ticket.py` expects. Confirm these match the current hook event names in the docs.
+- **Hook event names.** The hook fires on `PreToolUse` / `PostToolUse` with matcher `Task` — there is no `SubagentStart` event. The subagent name is read from `tool_input.subagent_type`.
 - **Notion property names.** The hook uses `Name`, `Phase`, `Agent`, `Status`, `Product`, `Started`, `Finished`. Override in `agents.config.json` if your DB uses different names.
 
 ## Cost note

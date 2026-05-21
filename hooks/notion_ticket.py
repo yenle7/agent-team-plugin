@@ -4,10 +4,11 @@ notion_ticket.py — Claude Code hook that writes phase-tagged tickets to Notion
 when a subagent starts or stops.
 
 How it's wired:
-  - Configured in a product repo's .claude/settings.json under "hooks":
-      "SubagentStart": [{"command": "python3 ~/.claude/plugins/agent-team/hooks/notion_ticket.py start"}],
-      "SubagentStop":  [{"command": "python3 ~/.claude/plugins/agent-team/hooks/notion_ticket.py finish"}]
-  - Claude Code pipes a JSON payload on stdin (session_id, subagent_type, etc.).
+  - Configured in a product repo's .claude/settings.json under "hooks".
+    See hooks/settings.snippet.json for the exact block. It fires on the
+    Task tool: PreToolUse ("start") and PostToolUse ("finish"), matcher "Task".
+  - Claude Code pipes a JSON payload on stdin (session_id, tool_input, etc.).
+    For Task-tool events the subagent name is in tool_input.subagent_type.
   - This script reads .claude/agents.config.json from the *consuming repo's cwd*
     to know which Notion DB to write to and which product tag to stamp.
   - State (the Notion page_id created on start) is cached in
@@ -83,6 +84,16 @@ def notion_request(method: str, path: str, body: dict | None, token: str) -> dic
         return json.loads(resp.read())
 
 
+def get_subagent(payload: dict) -> str:
+    tool_input = payload.get("tool_input") or {}
+    return (
+        tool_input.get("subagent_type")
+        or payload.get("subagent_type")
+        or payload.get("subagent")
+        or "unknown"
+    )
+
+
 def state_file(repo_root: Path, session_id: str, subagent: str) -> Path:
     state_dir = repo_root / ".claude" / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
@@ -90,7 +101,7 @@ def state_file(repo_root: Path, session_id: str, subagent: str) -> Path:
 
 
 def handle_start(payload: dict, repo_root: Path, cfg: dict, token: str) -> None:
-    subagent = payload.get("subagent_type") or payload.get("subagent") or "unknown"
+    subagent = get_subagent(payload)
     session_id = payload.get("session_id", "no-session")
     phase = PHASE_MAP.get(subagent, "Other")
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -128,7 +139,7 @@ def handle_start(payload: dict, repo_root: Path, cfg: dict, token: str) -> None:
 
 
 def handle_finish(payload: dict, repo_root: Path, cfg: dict, token: str) -> None:
-    subagent = payload.get("subagent_type") or payload.get("subagent") or "unknown"
+    subagent = get_subagent(payload)
     session_id = payload.get("session_id", "no-session")
     sf = state_file(repo_root, session_id, subagent)
     if not sf.exists():

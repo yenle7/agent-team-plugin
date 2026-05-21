@@ -1,0 +1,13 @@
+{
+  "name": "agent-team-plugin",
+  "owner": {
+    "name": "Yen"
+  },
+  "plugins": [
+    {
+      "name": "agent-team",
+      "source": "./",
+      "description": "A small-startup-team of Claude Code subagents that take a consumer-app feature from Think to Reflect, logging every phase to Notion."
+    }
+  ]
+}

@@ -1,15 +1,27 @@
 {
-  "_comment": "Merge these keys into your product repo's .claude/settings.json. The install.sh script does this for you. If you're doing it by hand, paste the 'hooks' object into your settings file.",
+  "_comment": "Merge these keys into your product repo's .claude/settings.json. The install.sh script does this for you. If you're doing it by hand, paste the 'hooks' object into your settings file. The hooks fire on the Task tool (subagent delegation): PreToolUse = a subagent is starting, PostToolUse = it finished.",
 
   "hooks": {
-    "SubagentStart": [
+    "PreToolUse": [
       {
-        "command": "python3 ~/.claude/plugins/agent-team/hooks/notion_ticket.py start"
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/plugins/agent-team/hooks/notion_ticket.py start"
+          }
+        ]
       }
     ],
-    "SubagentStop": [
+    "PostToolUse": [
       {
-        "command": "python3 ~/.claude/plugins/agent-team/hooks/notion_ticket.py finish"
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/plugins/agent-team/hooks/notion_ticket.py finish"
+          }
+        ]
       }
     ]
   }
