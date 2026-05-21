@@ -4,11 +4,13 @@ notion_ticket.py — Claude Code hook that writes phase-tagged tickets to Notion
 when a subagent starts or stops.
 
 How it's wired:
-  - Configured in a product repo's .claude/settings.json under "hooks".
-    See hooks/settings.snippet.json for the exact block. It fires on the
-    Task tool: PreToolUse ("start") and PostToolUse ("finish"), matcher "Task".
+  - Registered by the plugin itself via hooks/hooks.json — no per-repo
+    settings.json edit needed. It fires on the Task tool: PreToolUse
+    ("start") and PostToolUse ("finish"), matcher "Task".
   - Claude Code pipes a JSON payload on stdin (session_id, tool_input, etc.).
     For Task-tool events the subagent name is in tool_input.subagent_type.
+  - Fails soft in any repo that has no .claude/agents.config.json, so it is
+    harmless to leave active globally.
   - This script reads .claude/agents.config.json from the *consuming repo's cwd*
     to know which Notion DB to write to and which product tag to stamp.
   - State (the Notion page_id created on start) is cached in

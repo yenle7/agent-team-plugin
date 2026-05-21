@@ -42,14 +42,17 @@ claude plugin list
 
 ```bash
 cd ~/Documents/Birdie/birdie_care    # or birdie-play, or any future product
-bash ~/.claude/plugins/agent-team/scripts/install.sh
+bash ~/.claude/plugins/marketplaces/agent-team-plugin/scripts/install.sh
 ```
 
 What that does, idempotently:
 - Creates `.claude/agents.config.json` from the template, prefilled with `product_tag` from the folder name.
-- Creates or merges `.claude/settings.json` to register the Task-tool PreToolUse/PostToolUse hooks.
 - Registers the Notion MCP for this repo (`claude mcp add notion …`).
 - Adds `.claude/state/` to `.gitignore`.
+
+The Notion phase-logging hooks are **not** set up per repo — the plugin
+registers them itself via `hooks/hooks.json`, so they activate automatically
+wherever the plugin is enabled and fail soft in repos without a config.
 
 Then **fill in two things by hand**:
 1. Open `.claude/agents.config.json` and replace `REPLACE_WITH_NOTION_DATABASE_ID` with your actual Notion database id.
@@ -110,7 +113,7 @@ Each agent reads its predecessor's artifact file — not your conversation histo
 While testing, edit the *installed* copy (faster than round-tripping through git):
 
 ```bash
-$EDITOR ~/.claude/plugins/agent-team/agents/build.md
+$EDITOR ~/.claude/plugins/marketplaces/agent-team-plugin/agents/build.md
 # in your live claude session:
 > /agents reload    # (or restart claude)
 > /build <id>       # test the new prompt
@@ -119,7 +122,7 @@ $EDITOR ~/.claude/plugins/agent-team/agents/build.md
 When a change feels right, promote it back into the plugin repo:
 
 ```bash
-bash ~/.claude/plugins/agent-team/scripts/promote-agent.sh build
+bash ~/.claude/plugins/marketplaces/agent-team-plugin/scripts/promote-agent.sh build
 cd ~/Documents/Birdie/agent_team_plugin
 git diff agents/build.md
 git commit -am "build: stricter pre-flight on ambiguous specs"
@@ -133,8 +136,8 @@ claude plugin update agent-team
 You have two products today (`birdie_care`, `birdie-play`). Each gets its own bootstrap:
 
 ```bash
-cd ~/Documents/Birdie/birdie_care    && bash ~/.claude/plugins/agent-team/scripts/install.sh
-cd ~/Documents/Birdie/birdie-play    && bash ~/.claude/plugins/agent-team/scripts/install.sh
+cd ~/Documents/Birdie/birdie_care    && bash ~/.claude/plugins/marketplaces/agent-team-plugin/scripts/install.sh
+cd ~/Documents/Birdie/birdie-play    && bash ~/.claude/plugins/marketplaces/agent-team-plugin/scripts/install.sh
 ```
 
 Same plugin, different configs. The Notion `Product` property lets you filter tickets per product in one shared database. Adding a third product is one `install.sh` call away.
@@ -149,8 +152,8 @@ agent_team_plugin/
 ├── README.agents.md             ← this file
 ├── agents/                      ← 12 .md subagent files
 ├── hooks/
-│   ├── notion_ticket.py         ← writes phase-tagged tickets on SubagentStart/Stop
-│   └── settings.snippet.json    ← what install.sh merges into product .claude/settings.json
+│   ├── hooks.json               ← registers the Task PreToolUse/PostToolUse hooks
+│   └── notion_ticket.py         ← writes phase-tagged tickets to Notion
 ├── scripts/
 │   ├── install.sh               ← bootstrap a new product repo
 │   ├── standup.sh               ← cron entry for daily digest
@@ -165,7 +168,7 @@ agent_team_plugin/
 
 - **`plugin.json` schema.** The Claude Code plugin manifest format is evolving. Confirm field names against [the current docs](https://code.claude.com/docs/en/plugins) before publishing.
 - **Subagent directory name.** Recent Claude Code versions use `agents/` inside the plugin; some older docs reference `subagents/`. Run `claude /agents` from a repo that has the plugin installed — if your agents don't show up, try renaming the folder.
-- **Hook event names.** The hook fires on `PreToolUse` / `PostToolUse` with matcher `Task` — there is no `SubagentStart` event. The subagent name is read from `tool_input.subagent_type`.
+- **Hook event names.** `hooks/hooks.json` fires on `PreToolUse` / `PostToolUse` with matcher `Task` — there is no `SubagentStart` event. The subagent name is read from `tool_input.subagent_type`. Hook commands use `${CLAUDE_PLUGIN_ROOT}` so they survive plugin version bumps.
 - **Notion property names.** The hook uses `Name`, `Phase`, `Agent`, `Status`, `Product`, `Started`, `Finished`. Override in `agents.config.json` if your DB uses different names.
 
 ## Cost note

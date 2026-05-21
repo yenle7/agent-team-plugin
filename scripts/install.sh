@@ -41,36 +41,10 @@ else
   echo "       Set product_tag = ${TAG}. Edit the file to fill in the Notion DB id and tune the rest."
 fi
 
-# --- 2. settings.json merge (hooks) ---
-SETTINGS="${REPO_DIR}/.claude/settings.json"
-SNIPPET="${PLUGIN_DIR}/hooks/settings.snippet.json"
-
-if [ ! -f "${SETTINGS}" ]; then
-  # No settings file yet — copy the snippet (minus the _comment key) as the starting point.
-  python3 -c "
-import json, sys
-snippet = json.load(open('${SNIPPET}'))
-snippet.pop('_comment', None)
-json.dump(snippet, open('${SETTINGS}', 'w'), indent=2)
-"
-  echo "    Created .claude/settings.json with hook configuration."
-else
-  # Merge hooks into existing settings file.
-  python3 -c "
-import json
-existing = json.load(open('${SETTINGS}'))
-snippet  = json.load(open('${SNIPPET}'))
-snippet.pop('_comment', None)
-existing.setdefault('hooks', {})
-for event, handlers in snippet.get('hooks', {}).items():
-    existing['hooks'].setdefault(event, [])
-    for h in handlers:
-        if h not in existing['hooks'][event]:
-            existing['hooks'][event].append(h)
-json.dump(existing, open('${SETTINGS}', 'w'), indent=2)
-"
-  echo "    Merged hook handlers into existing .claude/settings.json."
-fi
+# --- 2. Notion hooks ---
+# Nothing to do here: the SubagentStart/Stop -> Notion hooks are registered
+# by the plugin itself (hooks/hooks.json) and activate automatically. They
+# fail soft in any repo without agents.config.json.
 
 # --- 3. Notion MCP registration (idempotent best-effort) ---
 if command -v claude >/dev/null 2>&1; then
